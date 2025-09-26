@@ -4,9 +4,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +16,7 @@ import Link from 'next/link';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Por favor, introduce un correo electrónico válido." }),
-  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
+  password: z.string().min(1, { message: "La contraseña es obligatoria." }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -26,6 +25,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect') || '/admin/products';
+  const { login } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
@@ -34,15 +34,21 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+
+    // This is a simplified, client-side-only authentication for demonstration.
+    // In a real-world scenario, you would make an API call to a backend to verify credentials.
+    const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com';
+    const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password';
+
+    if (data.email === ADMIN_EMAIL && data.password === ADMIN_PASSWORD) {
+      login(data.email);
       toast({
         title: "Inicio de Sesión Exitoso",
         description: "Redirigiendo al panel de administración...",
       });
       router.push(redirectUrl);
-    } catch (error) {
-      console.error("Error signing in:", error);
+    } else {
+      console.error("Authentication failed");
       toast({
         variant: "destructive",
         title: "Error de Inicio de Sesión",
@@ -73,6 +79,7 @@ export default function LoginPage() {
                   type="email"
                   placeholder="admin@ejemplo.com"
                   {...register('email')}
+                  defaultValue={process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com'}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
@@ -83,6 +90,7 @@ export default function LoginPage() {
                   type="password"
                   placeholder="••••••••"
                   {...register('password')}
+                  defaultValue={process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password'}
                 />
                 {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
               </div>
@@ -93,6 +101,10 @@ export default function LoginPage() {
             </form>
           </CardContent>
         </Card>
+        <div className="mt-4 text-center text-sm text-muted-foreground">
+            <p>Email: {process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com'}</p>
+            <p>Contraseña: {process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password'}</p>
+        </div>
       </div>
     </div>
   );

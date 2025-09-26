@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { signOut } from "firebase/auth"
-import { auth } from "@/lib/firebase"
 import { useAuth } from "@/hooks/use-auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -33,10 +31,10 @@ import { Package, LogOut, ChevronDown } from "lucide-react"
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
 
   const handleLogout = async () => {
-    await signOut(auth)
+    logout()
     router.push("/login")
   }
 
@@ -76,7 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Button variant="ghost" className="justify-start w-full text-left h-auto p-2 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-8">
                   <div className="flex items-center gap-2 w-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.photoURL || undefined} />
+                      {/* AvatarImage is removed as user object does not have photoURL */}
                       <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col items-start overflow-hidden group-data-[collapsible=icon]:hidden">
