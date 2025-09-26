@@ -41,7 +41,7 @@ export default function LoginPage() {
     // In a real-world scenario, you would make an API call to a backend to verify credentials.
     const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com';
     const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password';
-
+    
     if (data.email === ADMIN_EMAIL && data.password === ADMIN_PASSWORD) {
       login(data.email);
       toast({
@@ -120,4 +120,3 @@ export default function LoginPage() {
       </div>
     </div>
   );
-}
