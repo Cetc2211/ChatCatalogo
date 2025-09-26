@@ -81,7 +81,6 @@ export default function LoginPage() {
                   type="email"
                   placeholder="admin@ejemplo.com"
                   {...register('email')}
-                  defaultValue={process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com'}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
@@ -93,7 +92,6 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     {...register('password')}
-                    defaultValue={process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password'}
                     className="pr-10"
                   />
                   <button
@@ -120,3 +118,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
+}
