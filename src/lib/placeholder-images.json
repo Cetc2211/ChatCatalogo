@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "vintage-camera",
+      "description": "Una cámara de película clásica y elegante.",
+      "imageUrl": "https://images.unsplash.com/photo-1481923387198-050ac1a2896e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx2aW50YWdlJTIwY2FtZXJhfGVufDB8fHx8MTc1ODkxNzE5NXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vintage camera"
+    },
+    {
+      "id": "leather-backpack",
+      "description": "Una mochila de cuero resistente y con estilo para el día a día.",
+      "imageUrl": "https://images.unsplash.com/photo-1673906510954-bfa816f5043b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxsZWF0aGVyJTIwYmFja3BhY2t8ZW58MHx8fHwxNzU4ODQ1NDE0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "leather backpack"
+    },
+    {
+      "id": "ceramic-mug",
+      "description": "Taza de cerámica artesanal, perfecta para tu café de la mañana.",
+      "imageUrl": "https://images.unsplash.com/photo-1723021178142-369f81614c97?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjZXJhbWljJTIwbXVnfGVufDB8fHx8MTc1ODgzMjk3MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ceramic mug"
+    },
+    {
+      "id": "minimalist-watch",
+      "description": "Un reloj minimalista con correa de cuero, combina con cualquier atuendo.",
+      "imageUrl": "https://images.unsplash.com/photo-1575260279086-4d6bd9efcbeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxtaW5pbWFsaXN0JTIwd2F0Y2h8ZW58MHx8fHwxNzU4OTI4ODcyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "minimalist watch"
+    }
+  ]
 }
