@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from 'next/link';
 import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -26,7 +27,7 @@ import {
   SidebarTrigger,
   SidebarFooter
 } from "@/components/ui/sidebar"
-import { Package, LogOut, ChevronDown } from "lucide-react"
+import { Package, LogOut, ChevronDown, Eye } from "lucide-react"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -49,7 +50,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <SidebarHeader>
           <div className="flex items-center gap-2">
             <h1 className="font-semibold text-lg">Admin</h1>
-            <div className="ml-auto">
+             <Button variant="outline" size="sm" asChild className="ml-auto">
+                <Link href="/" target="_blank">
+                    <Eye className="mr-2 h-4 w-4" />
+                    Ver Sitio
+                </Link>
+             </Button>
+            <div className="ml-2">
               <SidebarTrigger />
             </div>
           </div>
