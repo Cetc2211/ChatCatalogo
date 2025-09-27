@@ -12,7 +12,8 @@ let products: Product[] = PlaceHolderImages.map((p, index) => ({
   description: p.description,
   price: parseFloat(((index + 1) * 23.45).toFixed(2)),
   imageUrl: p.imageUrl,
-  imagePath: `placeholder/${p.id}`
+  imagePath: `placeholder/${p.id}`,
+  category: p.category,
 }));
 
 export async function getProducts(): Promise<Product[]> {
@@ -25,6 +26,7 @@ const UpsertProductSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
   description: z.string().min(1, "La descripción es obligatoria."),
   price: z.coerce.number().positive("El precio debe ser un número positivo."),
+  category: z.string().min(1, "La categoría es obligatoria."),
   // We'll ignore image uploads for now as we don't have a backend storage.
   // We will keep the field to avoid breaking the form.
   image: z.any().optional(), 
@@ -45,6 +47,7 @@ export async function upsertProduct(data: UpsertProductData): Promise<Product> {
         name: validatedData.name,
         description: validatedData.description,
         price: validatedData.price,
+        category: validatedData.category,
       };
       
       revalidatePath("/");
@@ -60,6 +63,7 @@ export async function upsertProduct(data: UpsertProductData): Promise<Product> {
       name: validatedData.name,
       description: validatedData.description,
       price: validatedData.price,
+      category: validatedData.category,
       // For new products, let's just cycle through placeholder images
       imageUrl: PlaceHolderImages[products.length % PlaceHolderImages.length].imageUrl,
       imagePath: `new/${Date.now()}`

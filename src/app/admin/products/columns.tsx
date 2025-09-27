@@ -28,6 +28,7 @@ import {
 import { deleteProduct } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("es-MX", {
@@ -58,6 +59,11 @@ export const columns = ({ onEdit, onProductDeleted }: ColumnsProps): ColumnDef<P
   {
     accessorKey: "name",
     header: "Nombre",
+  },
+  {
+    accessorKey: "category",
+    header: "Categoría",
+    cell: ({ row }) => <Badge variant="secondary">{row.original.category}</Badge>
   },
   {
     accessorKey: "price",

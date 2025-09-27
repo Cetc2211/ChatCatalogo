@@ -5,4 +5,5 @@ export interface Product {
   price: number;
   imageUrl: string;
   imagePath?: string; // To keep track of the file in Storage for deletion
+  category: string;
 }

@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Image from "next/image";
 import { Product } from "@/lib/types";
-import { upsertProduct } from "@/app/actions";
+import { upsertProduct, getProducts } from "@/app/actions";
 import { enhanceProductDescription } from "@/ai/flows/enhance-product-description";
 
 import { Button } from "@/components/ui/button";
@@ -34,11 +34,20 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox";
 
 const productSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
   description: z.string().min(1, "La descripción es obligatoria."),
   price: z.coerce.number().positive("El precio debe ser un número positivo."),
+  category: z.string().min(1, "La categoría es obligatoria."),
   image: z.any(),
 });
 
@@ -55,6 +64,8 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(product?.imageUrl || null);
+  const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
+
   
   const [isAiLoading, startAiTransition] = useTransition();
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
@@ -65,9 +76,19 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
       name: product?.name || "",
       description: product?.description || "",
       price: product?.price || 0,
+      category: product?.category || "",
       image: null,
     },
   });
+
+  useEffect(() => {
+    async function fetchCategories() {
+      const allProducts = await getProducts();
+      const uniqueCategories = [...new Set(allProducts.map(p => p.category))];
+      setCategories(uniqueCategories.map(c => ({ value: c, label: c })));
+    }
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     if (product) {
@@ -75,11 +96,12 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
         name: product.name,
         description: product.description,
         price: product.price,
+        category: product.category,
         image: null,
       });
       setPreviewImage(product.imageUrl);
     } else {
-      form.reset({ name: "", description: "", price: 0, image: null });
+      form.reset({ name: "", description: "", price: 0, category: "", image: null });
       setPreviewImage(null);
     }
   }, [product, form, isOpen]);
@@ -160,7 +182,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{product ? "Editar Producto" : "Añadir Nuevo Producto"}</DialogTitle>
             <DialogDescription>
@@ -205,19 +227,40 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio (MXN)</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" placeholder="19.99" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Precio (MXN)</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" placeholder="19.99" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoría</FormLabel>
+                      <FormControl>
+                        <Combobox
+                          options={categories}
+                          value={field.value}
+                          onChange={(value) => form.setValue('category', value)}
+                          placeholder="Seleccionar o crear..."
+                          createLabel="Crear nueva categoría"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="image"
