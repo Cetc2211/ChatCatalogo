@@ -99,7 +99,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
         setPreviewImages([]);
       }
     }
-  }, [product, isOpen, form]);
+  }, [product, isOpen]);
 
   const handleCreateCategory = (newCategory: string) => {
     setCategories(prev => [...prev, { value: newCategory, label: newCategory }]);
@@ -354,5 +354,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
     </>
   );
 }
+
+    
 
     
