@@ -44,11 +44,11 @@ type ColumnsProps = {
 
 export const columns = ({ onEdit, onProductDeleted }: ColumnsProps): ColumnDef<Product>[] => [
   {
-    accessorKey: "imageUrl",
+    accessorKey: "imageUrls",
     header: "Imagen",
     cell: ({ row }) => (
       <Image
-        src={row.original.imageUrl}
+        src={row.original.imageUrls[0]}
         alt={row.original.name}
         width={64}
         height={64}
@@ -80,7 +80,7 @@ export const columns = ({ onEdit, onProductDeleted }: ColumnsProps): ColumnDef<P
       const handleDelete = async () => {
         setIsDeleting(true);
         try {
-          await deleteProduct(product.id, product.imagePath);
+          await deleteProduct(product.id, product.imagePaths);
           toast({
             title: "Producto eliminado",
             description: `El producto "${product.name}" ha sido eliminado.`,

@@ -3,7 +3,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  imageUrl: string;
-  imagePath?: string; // To keep track of the file in Storage for deletion
+  imageUrls: string[]; // Changed from imageUrl
+  imagePaths?: string[]; // Changed from imagePath
   category: string;
 }

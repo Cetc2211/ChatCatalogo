@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, X } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
 
 const productSchema = z.object({
@@ -40,7 +40,7 @@ const productSchema = z.object({
   description: z.string().min(1, "La descripción es obligatoria."),
   price: z.coerce.number().positive("El precio debe ser un número positivo."),
   category: z.string().min(1, "La categoría es obligatoria."),
-  image: z.any().optional(),
+  images: z.any().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -55,7 +55,7 @@ interface ProductFormProps {
 export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: ProductFormProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(product?.imageUrl || null);
+  const [previewImages, setPreviewImages] = useState<string[]>(product?.imageUrls || []);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
 
   
@@ -69,7 +69,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
       description: product?.description || "",
       price: product?.price || 0,
       category: product?.category || "",
-      image: null,
+      images: null,
     },
   });
 
@@ -89,12 +89,12 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
         description: product.description,
         price: product.price,
         category: product.category,
-        image: null,
+        images: null,
       });
-      setPreviewImage(product.imageUrl);
+      setPreviewImages(product.imageUrls);
     } else {
-      form.reset({ name: "", description: "", price: 0, category: "", image: null });
-      setPreviewImage(null);
+      form.reset({ name: "", description: "", price: 0, category: "", images: null });
+      setPreviewImages([]);
     }
   }, [product, form, isOpen]);
 
@@ -104,11 +104,11 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
   };
 
   const onSubmit = async (data: ProductFormValues) => {
-    if (!previewImage) {
+    if (previewImages.length === 0) {
         toast({
             variant: "destructive",
             title: "Error",
-            description: "Por favor, selecciona una imagen para el producto.",
+            description: "Por favor, sube al menos una imagen para el producto.",
         });
         return;
     }
@@ -117,9 +117,9 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
       const newProduct = await upsertProduct({
         id: product?.id,
         ...data,
-        imageUrl: previewImage,
-        image: data.image?.[0], // Pass the file object
-        existingImagePath: product?.imagePath
+        imageUrls: previewImages,
+        images: data.images, // Pass the file list
+        existingImagePaths: product?.imagePaths
       });
       toast({
         title: "Éxito",
@@ -139,15 +139,27 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files) {
+      const newImageUrls: string[] = [];
+      const fileArray = Array.from(files);
+      
+      fileArray.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          newImageUrls.push(reader.result as string);
+          if(newImageUrls.length === fileArray.length) {
+            setPreviewImages(prev => [...prev, ...newImageUrls]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
+
+  const removePreviewImage = (index: number) => {
+    setPreviewImages(prev => prev.filter((_, i) => i !== index));
+  }
   
   const handleEnhanceDescription = () => {
     const { name, description } = form.getValues();
@@ -270,19 +282,31 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
               </div>
               <FormField
                 control={form.control}
-                name="image"
+                name="images"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Imagen</FormLabel>
-                    {previewImage && (
-                      <div className="w-full h-40 relative my-2">
-                        <Image src={previewImage} alt="Previsualización" fill className="rounded-md object-cover" />
-                      </div>
-                    )}
+                    <FormLabel>Imágenes</FormLabel>
+                    <div className="grid grid-cols-3 gap-2">
+                      {previewImages.map((src, index) => (
+                        <div key={index} className="relative aspect-square">
+                          <Image src={src} alt={`Previsualización ${index + 1}`} fill className="rounded-md object-cover" />
+                           <Button 
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                              onClick={() => removePreviewImage(index)}
+                           >
+                              <X className="h-4 w-4" />
+                           </Button>
+                        </div>
+                      ))}
+                    </div>
                     <FormControl>
                       <Input 
                         type="file" 
                         accept="image/*"
+                        multiple
                         onChange={(e) => {
                           field.onChange(e.target.files);
                           handleImageChange(e);

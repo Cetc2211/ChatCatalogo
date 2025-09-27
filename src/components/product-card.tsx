@@ -1,16 +1,14 @@
 
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { Product } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { WhatsAppDialog } from "./whatsapp-dialog";
-import { ShoppingCart } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 interface ProductCardProps {
   product: Product;
+  onViewDetails: () => void;
 }
 
 const formatPrice = (price: number) => {
@@ -20,42 +18,40 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-export function ProductCard({ product }: ProductCardProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
+export function ProductCard({ product, onViewDetails }: ProductCardProps) {
   return (
-    <>
-      <Card className="flex flex-col h-full overflow-hidden transition-shadow duration-300 hover:shadow-lg">
-        <CardHeader className="p-0">
-          <div className="relative aspect-[4/3] w-full">
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            />
-          </div>
-        </CardHeader>
-        <CardContent className="flex-1 p-6">
-          <CardTitle className="mb-2 text-xl font-headline">{product.name}</CardTitle>
-          <CardDescription className="text-muted-foreground line-clamp-3">
-            {product.description}
-          </CardDescription>
-        </CardContent>
-        <CardFooter className="p-6 pt-0 flex justify-between items-center">
-          <p className="text-xl font-semibold text-primary">{formatPrice(product.price)}</p>
-          <Button onClick={() => setIsDialogOpen(true)}>
-            <ShoppingCart className="mr-2 h-4 w-4" />
-            Comprar Ahora
-          </Button>
-        </CardFooter>
-      </Card>
-      <WhatsAppDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        productName={product.name}
-      />
-    </>
+    <Card 
+      className="flex flex-col h-full overflow-hidden transition-shadow duration-300 hover:shadow-lg cursor-pointer group"
+      onClick={onViewDetails}
+    >
+      <Carousel className="w-full relative">
+        <CarouselContent>
+          {product.imageUrls.map((url, index) => (
+            <CarouselItem key={index}>
+              <div className="relative aspect-[4/3] w-full">
+                <Image
+                  src={url}
+                  alt={`${product.name} - imagen ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                />
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        {product.imageUrls.length > 1 && (
+          <>
+            <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </>
+        )}
+      </Carousel>
+      <CardContent className="p-4 flex-1">
+        <h3 className="font-semibold text-lg truncate">{product.name}</h3>
+        <p className="text-muted-foreground line-clamp-2 text-sm">{product.description}</p>
+        <p className="font-bold text-primary mt-2">{formatPrice(product.price)}</p>
+      </CardContent>
+    </Card>
   );
 }
