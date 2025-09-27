@@ -32,15 +32,17 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    }
   });
 
   const onSubmit = async (data: LoginFormValues) => {
     setLoading(true);
 
-    // This is a simplified, client-side-only authentication for demonstration.
-    // In a real-world scenario, you would make an API call to a backend to verify credentials.
-    const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com';
-    const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password';
+    const ADMIN_EMAIL = 'mpceciliotopetecruz@gmail.com';
+    const ADMIN_PASSWORD = 'Nomeacuerdo221182';
     
     if (data.email === ADMIN_EMAIL && data.password === ADMIN_PASSWORD) {
       login(data.email);
@@ -112,8 +114,8 @@ export default function LoginPage() {
           </CardContent>
         </Card>
         <div className="mt-4 text-center text-sm text-muted-foreground">
-            <p>Email: {process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com'}</p>
-            <p>Contraseña: {process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'password'}</p>
+            <p>Email: mpceciliotopetecruz@gmail.com</p>
+            <p>Contraseña: Nomeacuerdo221182</p>
         </div>
       </div>
     </div>
