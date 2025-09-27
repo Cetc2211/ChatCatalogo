@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
@@ -34,13 +33,6 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Combobox } from "@/components/ui/combobox";
 
 const productSchema = z.object({
@@ -105,6 +97,11 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
       setPreviewImage(null);
     }
   }, [product, form, isOpen]);
+
+  const handleCreateCategory = (newCategory: string) => {
+    setCategories(prev => [...prev, { value: newCategory, label: newCategory }]);
+    form.setValue('category', newCategory, { shouldValidate: true });
+  };
 
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
@@ -251,7 +248,8 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
                         <Combobox
                           options={categories}
                           value={field.value}
-                          onChange={(value) => form.setValue('category', value)}
+                          onChange={(value) => form.setValue('category', value, { shouldValidate: true })}
+                          onCreate={handleCreateCategory}
                           placeholder="Seleccionar o crear..."
                           createLabel="Crear nueva categoría"
                         />

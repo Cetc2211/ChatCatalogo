@@ -30,6 +30,7 @@ interface ComboboxProps {
   onChange: (value: string) => void;
   placeholder?: string;
   createLabel?: string;
+  onCreate?: (value: string) => void;
 }
 
 export function Combobox({
@@ -38,25 +39,24 @@ export function Combobox({
   onChange,
   placeholder = "Select an option",
   createLabel = "Create",
+  onCreate,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [currentOptions, setCurrentOptions] = React.useState(options);
   const [inputValue, setInputValue] = React.useState('');
 
-  React.useEffect(() => {
-    setCurrentOptions(options);
-  }, [options]);
-
   const handleCreate = () => {
-    if (inputValue && !currentOptions.some(opt => opt.label.toLowerCase() === inputValue.toLowerCase())) {
-      const newValue = inputValue;
-      const newOption = { value: newValue, label: newValue };
-      setCurrentOptions(prev => [...prev, newOption]);
-      onChange(newValue);
+    if (inputValue && !options.some(opt => opt.label.toLowerCase() === inputValue.toLowerCase())) {
+      if (onCreate) {
+        onCreate(inputValue);
+      } else {
+        onChange(inputValue);
+      }
       setOpen(false);
       setInputValue('');
     }
   }
+
+  const currentLabel = options.find((option) => option.value.toLowerCase() === value?.toLowerCase())?.label || value;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -67,9 +67,9 @@ export function Combobox({
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {value
-            ? currentOptions.find((option) => option.value === value)?.label
-            : placeholder}
+          <span className="truncate">
+            {value ? currentLabel : placeholder}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -81,24 +81,31 @@ export function Combobox({
             onValueChange={setInputValue}
           />
           <CommandList>
-            <CommandEmpty onSelect={handleCreate} className="cursor-pointer p-2 text-sm">
+            {inputValue && !options.some(opt => opt.label.toLowerCase() === inputValue.toLowerCase()) && (
+              <CommandItem
+                onSelect={handleCreate}
+                className="cursor-pointer"
+              >
                 {createLabel}: "{inputValue}"
-            </CommandEmpty>
+              </CommandItem>
+            )}
+            <CommandEmpty>No se encontraron opciones.</CommandEmpty>
             <CommandGroup>
-              {currentOptions.map((option) => (
+              {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value ? "" : currentValue)
-                    setOpen(false)
-                    setInputValue('')
+                  value={option.label}
+                  onSelect={(currentLabel) => {
+                    const selectedValue = options.find(opt => opt.label.toLowerCase() === currentLabel.toLowerCase())?.value || '';
+                    onChange(selectedValue === value ? "" : selectedValue);
+                    setOpen(false);
+                    setInputValue('');
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
+                      value && value.toLowerCase() === option.value.toLowerCase() ? "opacity-100" : "opacity-0"
                     )}
                   />
                   {option.label}
