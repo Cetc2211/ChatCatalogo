@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Image from "next/image";
 import { Product } from "@/lib/types";
-import { upsertProduct, getProducts } from "@/app/actions";
+import { upsertProduct } from "@/app/actions";
 import { enhanceProductDescription } from "@/ai/flows/enhance-product-description";
 
 import { Button } from "@/components/ui/button";
@@ -51,14 +51,14 @@ interface ProductFormProps {
   onOpenChange: (isOpen: boolean) => void;
   product: Product | null;
   onSuccess: (product: Product) => void;
+  categories: { value: string; label: string }[];
+  setCategories: React.Dispatch<React.SetStateAction<{ value: string; label: string }[]>>;
 }
 
-export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: ProductFormProps) {
+export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categories, setCategories }: ProductFormProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [previewImages, setPreviewImages] = useState<string[]>(product?.imageUrls || []);
-  const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
-
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
   
   const [isAiLoading, startAiTransition] = useTransition();
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
@@ -66,22 +66,13 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      name: product?.name || "",
-      description: product?.description || "",
-      price: product?.price || "",
-      category: product?.category || "",
+      name: "",
+      description: "",
+      price: "",
+      category: "",
       images: null,
     },
   });
-
-  useEffect(() => {
-    async function fetchCategories() {
-      const allProducts = await getProducts();
-      const uniqueCategories = [...new Set(allProducts.map(p => p.category))];
-      setCategories(uniqueCategories.map(c => ({ value: c, label: c })));
-    }
-    fetchCategories();
-  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -99,7 +90,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
         setPreviewImages([]);
       }
     }
-  }, [product, isOpen, form.reset]);
+  }, [product, isOpen]);
 
   const handleCreateCategory = (newCategory: string) => {
     const newCategoryOption = { value: newCategory, label: newCategory };
@@ -357,5 +348,3 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
     </>
   );
 }
-
-    
