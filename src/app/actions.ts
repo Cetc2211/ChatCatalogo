@@ -17,53 +17,34 @@ let products: Product[] = PlaceHolderImages.map((p, index) => ({
   category: p.category,
 }));
 
+// This function now correctly merges in-memory changes with the initial placeholder data
 export async function getProducts(): Promise<Product[]> {
-  // Always start with a fresh copy from the placeholder images to ensure data consistency across server reloads
-  const currentProducts = PlaceHolderImages.map((p, index) => ({
-    id: p.id,
-    name: p.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-    description: p.description,
-    price: parseFloat(((index + 1) * 23.45).toFixed(2)),
-    imageUrls: [p.imageUrl],
-    imagePaths: [`placeholder/${p.id}`],
-    category: p.category,
-  }));
+  const productsMap = new Map<string, Product>();
 
-  // Create a map of the current (placeholder) products for efficient lookup
-  const placeholderMap = new Map(currentProducts.map(p => [p.id, p]));
+  // 1. Add initial placeholder products to the map
+  PlaceHolderImages.forEach((p, index) => {
+    productsMap.set(p.id, {
+      id: p.id,
+      name: p.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      description: p.description,
+      price: parseFloat(((index + 1) * 23.45).toFixed(2)),
+      imageUrls: [p.imageUrl],
+      imagePaths: [`placeholder/${p.id}`],
+      category: p.category,
+    });
+  });
 
-  // Create a new array to hold the merged list
-  const mergedProducts: Product[] = [];
-  const processedIds = new Set<string>();
-
-  // Iterate over the in-memory products (which contains edits and new products)
-  for (const product of products) {
-    // If the product is an edited version of a placeholder, use the in-memory version
-    if (placeholderMap.has(product.id)) {
-      mergedProducts.push(product);
-      processedIds.add(product.id);
-    } else {
-      // If it's a new product, add it
-      mergedProducts.push(product);
-      processedIds.add(product.id);
-    }
-  }
-
-  // Add any placeholder products that weren't in the in-memory list (e.g., if the in-memory list was cleared)
-  for (const placeholderProduct of currentProducts) {
-    if (!processedIds.has(placeholderProduct.id)) {
-      mergedProducts.push(placeholderProduct);
-    }
-  }
+  // 2. Override placeholders with any modified in-memory products and add new ones
+  products.forEach(p => {
+    productsMap.set(p.id, p);
+  });
   
-  // Update the global in-memory store with the correctly merged and ordered list
-  products = mergedProducts.sort((a, b) => a.name.localeCompare(b.name));
+  const mergedProducts = Array.from(productsMap.values());
   
-  return structuredClone(products);
+  return structuredClone(mergedProducts.sort((a, b) => a.name.localeCompare(b.name)));
 }
 
-// Validation is now handled on the client-side before calling this action.
-// The data received here is expected to be clean.
+// The data received here is expected to be clean as validation happens client-side.
 export async function upsertProduct(data: Omit<Product, 'imagePaths'> & { id?: string }): Promise<Product> {
   if (data.id) {
     // Update existing product
@@ -78,7 +59,17 @@ export async function upsertProduct(data: Omit<Product, 'imagePaths'> & { id?: s
       revalidatePath("/admin/products");
       return products[productIndex];
     } else {
-        throw new Error("Product not found");
+        // If the product doesn't exist in our memory but has an ID (e.g. placeholder), add it.
+        const newProductFromPlaceholder: Product = {
+            ...data,
+            id: data.id,
+            imagePaths: data.imageUrls.map((_, i) => `${data.id}_${i}`),
+        };
+        products.push(newProductFromPlaceholder);
+        
+        revalidatePath("/");
+        revalidatePath("/admin/products");
+        return newProductFromPlaceholder;
     }
   } else {
     // Create new product
@@ -87,7 +78,7 @@ export async function upsertProduct(data: Omit<Product, 'imagePaths'> & { id?: s
       id: `prod_${Date.now()}`,
       imagePaths: data.imageUrls.map((_, i) => `new/${Date.now()}_${i}`)
     };
-    products.unshift(newProduct); // Add to the beginning of the array
+    products.push(newProduct);
 
     revalidatePath("/");
     revalidatePath("/admin/products");
