@@ -84,20 +84,22 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
   }, []);
 
   useEffect(() => {
-    if (product) {
-      form.reset({
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        category: product.category,
-        images: null,
-      });
-      setPreviewImages(product.imageUrls);
-    } else {
-      form.reset({ name: "", description: "", price: undefined, category: "", images: null });
-      setPreviewImages([]);
+    if (isOpen) {
+      if (product) {
+        form.reset({
+          name: product.name,
+          description: product.description,
+          price: product.price,
+          category: product.category,
+          images: null,
+        });
+        setPreviewImages(product.imageUrls);
+      } else {
+        form.reset({ name: "", description: "", price: undefined, category: "", images: null });
+        setPreviewImages([]);
+      }
     }
-  }, [product, form, isOpen]);
+  }, [product, isOpen, form]);
 
   const handleCreateCategory = (newCategory: string) => {
     setCategories(prev => [...prev, { value: newCategory, label: newCategory }]);
