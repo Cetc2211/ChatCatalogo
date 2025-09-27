@@ -17,8 +17,8 @@ let products: Product[] = PlaceHolderImages.map((p, index) => ({
 }));
 
 export async function getProducts(): Promise<Product[]> {
-  // Return a copy to prevent direct mutation of the in-memory store
-  return JSON.parse(JSON.stringify(products.sort((a, b) => a.name.localeCompare(b.name))));
+  // Return a structured clone to prevent direct mutation and handle complex objects
+  return structuredClone(products.sort((a, b) => a.name.localeCompare(b.name)));
 }
 
 const UpsertProductSchema = z.object({
