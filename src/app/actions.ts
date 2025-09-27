@@ -29,7 +29,7 @@ const UpsertProductSchema = z.object({
   category: z.string().min(1, "La categoría es obligatoria."),
   imageUrls: z.array(z.string()).min(1, "Se requiere al menos una imagen."), 
   existingImagePaths: z.array(z.string()).optional(),
-});
+}).passthrough(); // Allow other fields (like 'images' FileList)
 
 type UpsertProductData = z.infer<typeof UpsertProductSchema> & { images?: File[] };
 
