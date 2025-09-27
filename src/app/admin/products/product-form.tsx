@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
@@ -38,7 +39,7 @@ import { Combobox } from "@/components/ui/combobox";
 const productSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
   description: z.string().min(1, "La descripción es obligatoria."),
-  price: z.coerce.number().positive("El precio debe ser un número positivo."),
+  price: z.coerce.number({invalid_type_error: "El precio debe ser un número."}).positive("El precio debe ser un número positivo."),
   category: z.string().min(1, "La categoría es obligatoria."),
   images: z.any().optional(),
 });
@@ -67,7 +68,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
     defaultValues: {
       name: product?.name || "",
       description: product?.description || "",
-      price: product?.price || 0,
+      price: product?.price || undefined,
       category: product?.category || "",
       images: null,
     },
@@ -93,7 +94,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
       });
       setPreviewImages(product.imageUrls);
     } else {
-      form.reset({ name: "", description: "", price: 0, category: "", images: null });
+      form.reset({ name: "", description: "", price: undefined, category: "", images: null });
       setPreviewImages([]);
     }
   }, [product, form, isOpen]);
@@ -351,3 +352,5 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
     </>
   );
 }
+
+    
