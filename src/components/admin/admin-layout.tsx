@@ -76,37 +76,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="justify-start w-full text-left h-auto p-2 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-8">
-                  <div className="flex items-center gap-2 w-full">
-                    <Avatar className="h-8 w-8">
-                      {/* AvatarImage is removed as user object does not have photoURL */}
-                      <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col items-start overflow-hidden group-data-[collapsible=icon]:hidden">
-                      <span className="truncate text-sm font-medium">{user?.email}</span>
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="justify-start w-full text-left h-auto p-2 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:h-8">
+                    <div className="flex items-center gap-2 w-full">
+                      <Avatar className="h-8 w-8">
+                        {/* AvatarImage is removed as user object does not have photoURL */}
+                        <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col items-start overflow-hidden group-data-[collapsible=icon]:hidden">
+                        <span className="truncate text-sm font-medium">{user.email}</span>
+                      </div>
+                      <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
                     </div>
-                    <ChevronDown className="ml-auto h-4 w-4 group-data-[collapsible=icon]:hidden" />
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="right" align="start" className="w-56">
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">Mi Cuenta</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user?.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar Sesión</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">Mi Cuenta</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Cerrar Sesión</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
         </SidebarFooter>
       </Sidebar>
 
