@@ -40,7 +40,7 @@ const productSchema = z.object({
   description: z.string().min(1, "La descripción es obligatoria."),
   price: z.coerce.number().positive("El precio debe ser un número positivo."),
   category: z.string().min(1, "La categoría es obligatoria."),
-  image: z.any(),
+  image: z.any().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -104,11 +104,20 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
   };
 
   const onSubmit = async (data: ProductFormValues) => {
+    if (!previewImage) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Por favor, selecciona una imagen para el producto.",
+        });
+        return;
+    }
     setLoading(true);
     try {
       const newProduct = await upsertProduct({
         id: product?.id,
         ...data,
+        imageUrl: previewImage,
         image: data.image?.[0], // Pass the file object
         existingImagePath: product?.imagePath
       });

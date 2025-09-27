@@ -27,15 +27,16 @@ const UpsertProductSchema = z.object({
   description: z.string().min(1, "La descripción es obligatoria."),
   price: z.coerce.number().positive("El precio debe ser un número positivo."),
   category: z.string().min(1, "La categoría es obligatoria."),
-  // We'll ignore image uploads for now as we don't have a backend storage.
-  // We will keep the field to avoid breaking the form.
-  image: z.any().optional(), 
+  imageUrl: z.string().min(1, "La URL de la imagen es obligatoria."), 
   existingImagePath: z.string().optional(),
 });
 
-type UpsertProductData = z.infer<typeof UpsertProductSchema>;
+type UpsertProductData = z.infer<typeof UpsertProductSchema> & { image?: File };
 
 export async function upsertProduct(data: UpsertProductData): Promise<Product> {
+  // We're not handling file uploads to a backend, so if a new image file is present,
+  // we'll just use the provided imageUrl (which will be a data URL).
+  // In a real app, you'd upload the file to a storage service here.
   const validatedData = UpsertProductSchema.parse(data);
   
   if (validatedData.id) {
@@ -48,6 +49,7 @@ export async function upsertProduct(data: UpsertProductData): Promise<Product> {
         description: validatedData.description,
         price: validatedData.price,
         category: validatedData.category,
+        imageUrl: validatedData.imageUrl, // Update image URL if it changed
       };
       
       revalidatePath("/");
@@ -64,8 +66,7 @@ export async function upsertProduct(data: UpsertProductData): Promise<Product> {
       description: validatedData.description,
       price: validatedData.price,
       category: validatedData.category,
-      // For new products, let's just cycle through placeholder images
-      imageUrl: PlaceHolderImages[products.length % PlaceHolderImages.length].imageUrl,
+      imageUrl: validatedData.imageUrl, // Use the new image URL
       imagePath: `new/${Date.now()}`
     };
     products.unshift(newProduct); // Add to the beginning of the array
