@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from '@/hooks/use-auth';
 import Script from 'next/script';
 
+// Force new commit
 export const metadata: Metadata = {
   title: 'Catálogo de Chat Commerce',
   description: 'Un catálogo de comercio electrónico con integración de chat.',
