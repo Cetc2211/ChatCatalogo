@@ -17,37 +17,20 @@ let products: Product[] = PlaceHolderImages.map((p, index) => ({
 }));
 
 export async function getProducts(): Promise<Product[]> {
-  // Return a structured clone to prevent direct mutation and handle complex objects
+  // Use structuredClone for deep cloning, which is safer for complex objects.
   return structuredClone(products.sort((a, b) => a.name.localeCompare(b.name)));
 }
 
-const UpsertProductSchema = z.object({
-  id: z.string().optional(),
-  name: z.string().min(1, "El nombre es obligatorio."),
-  description: z.string().min(1, "La descripción es obligatoria."),
-  price: z.coerce.number().positive("El precio debe ser un número positivo."),
-  category: z.string().min(1, "La categoría es obligatoria."),
-  imageUrls: z.array(z.string()).min(1, "Se requiere al menos una imagen."), 
-  existingImagePaths: z.array(z.string()).optional(),
-}).passthrough(); // Allow other fields (like 'images' FileList)
-
-type UpsertProductData = z.infer<typeof UpsertProductSchema> & { images?: File[] };
-
-export async function upsertProduct(data: UpsertProductData): Promise<Product> {
-  // We're not handling file uploads to a backend, so we just use the provided imageUrls (data URLs).
-  const validatedData = UpsertProductSchema.parse(data);
-  
-  if (validatedData.id) {
+// Validation is now handled on the client-side before calling this action.
+// The data received here is expected to be clean.
+export async function upsertProduct(data: Omit<Product, 'imagePaths'> & { id?: string }): Promise<Product> {
+  if (data.id) {
     // Update existing product
-    const productIndex = products.findIndex(p => p.id === validatedData.id);
+    const productIndex = products.findIndex(p => p.id === data.id);
     if (productIndex > -1) {
       products[productIndex] = {
         ...products[productIndex],
-        name: validatedData.name,
-        description: validatedData.description,
-        price: validatedData.price,
-        category: validatedData.category,
-        imageUrls: validatedData.imageUrls, // Update image URLs
+        ...data,
       };
       
       revalidatePath("/");
@@ -59,13 +42,9 @@ export async function upsertProduct(data: UpsertProductData): Promise<Product> {
   } else {
     // Create new product
     const newProduct: Product = {
+      ...data,
       id: `prod_${Date.now()}`,
-      name: validatedData.name,
-      description: validatedData.description,
-      price: validatedData.price,
-      category: validatedData.category,
-      imageUrls: validatedData.imageUrls,
-      imagePaths: validatedData.imageUrls.map((_, i) => `new/${Date.now()}_${i}`)
+      imagePaths: data.imageUrls.map((_, i) => `new/${Date.now()}_${i}`)
     };
     products.unshift(newProduct); // Add to the beginning of the array
 

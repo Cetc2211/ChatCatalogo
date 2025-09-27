@@ -36,15 +36,23 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, X } from "lucide-react";
 import { Combobox } from "@/components/ui/combobox";
 
+// This schema is now used on the client-side for validation before submitting to the server action.
 const productSchema = z.object({
   name: z.string().min(1, "El nombre es obligatorio."),
   description: z.string().min(1, "La descripción es obligatoria."),
   price: z.coerce.number({invalid_type_error: "El precio debe ser un número."}).positive("El precio debe ser un número positivo."),
   category: z.string().min(1, "La categoría es obligatoria."),
-  images: z.any().optional(),
+  imageUrls: z.array(z.string()).min(1, "Se requiere al menos una imagen."),
 });
 
-type ProductFormValues = z.infer<typeof productSchema>;
+// The form values type now reflects the input types more accurately.
+type ProductFormValues = {
+    name: string;
+    description: string;
+    price: string | number; // Allow string for input, coerce to number for validation
+    category: string;
+    images: FileList | null; // For the file input
+};
 
 interface ProductFormProps {
   isOpen: boolean;
@@ -64,7 +72,14 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
 
   const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+    resolver: async (data, context, options) => {
+        // We create a new object for validation that includes previewImages
+        const validationData = {
+            ...data,
+            imageUrls: previewImages,
+        };
+        return zodResolver(productSchema)(validationData, context, options);
+    },
     defaultValues: {
       name: "",
       description: "",
@@ -73,7 +88,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
       images: null,
     },
   });
-
+  
   useEffect(() => {
     if (isOpen) {
       if (product) {
@@ -90,7 +105,8 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
         setPreviewImages([]);
       }
     }
-  }, [product, isOpen]);
+  }, [product, isOpen, form.reset]);
+
 
   const handleCreateCategory = (newCategory: string) => {
     const newCategoryOption = { value: newCategory, label: newCategory };
@@ -101,35 +117,41 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
   };
 
   const onSubmit = async (data: ProductFormValues) => {
-    if (previewImages.length === 0) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Por favor, sube al menos una imagen para el producto.",
-        });
-        return;
-    }
     setLoading(true);
     try {
+      // Validate and prepare data on the client
+      const validatedData = productSchema.parse({
+          ...data,
+          imageUrls: previewImages,
+      });
+
       const newProduct = await upsertProduct({
         id: product?.id,
-        ...data,
-        imageUrls: previewImages,
-        images: data.images, // Pass the file list
-        existingImagePaths: product?.imagePaths
+        ...validatedData
       });
+
       toast({
         title: "Éxito",
         description: `Producto ${product ? 'actualizado' : 'creado'} correctamente.`,
       });
       onSuccess(newProduct);
     } catch (error) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `No se pudo ${product ? 'actualizar' : 'crear'} el producto.`,
-      });
+       if (error instanceof z.ZodError) {
+        // This will now catch validation errors on the client
+        console.error("Validation error:", error.errors);
+        toast({
+          variant: "destructive",
+          title: "Error de validación",
+          description: error.errors[0]?.message || "Por favor, revisa los campos del formulario.",
+        });
+      } else {
+        console.error("Upsert error:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `No se pudo ${product ? 'actualizar' : 'crear'} el producto.`,
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -147,6 +169,8 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
           newImageUrls.push(reader.result as string);
           if(newImageUrls.length === fileArray.length) {
             setPreviewImages(prev => [...prev, ...newImageUrls]);
+            // Manually trigger validation for imageUrls
+            form.trigger('category');
           }
         };
         reader.readAsDataURL(file);
@@ -155,7 +179,12 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
   };
 
   const removePreviewImage = (index: number) => {
-    setPreviewImages(prev => prev.filter((_, i) => i !== index));
+    setPreviewImages(prev => {
+        const newImages = prev.filter((_, i) => i !== index);
+        // Manually update form state and trigger validation
+        form.setValue('imageUrls', newImages, { shouldValidate: true });
+        return newImages;
+    });
   }
   
   const handleEnhanceDescription = () => {
@@ -250,7 +279,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
                     <FormItem>
                       <FormLabel>Precio (MXN)</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" placeholder="19.99" {...field} />
+                        <Input type="number" step="0.01" placeholder="19.99" {...field} value={field.value ?? ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -283,6 +312,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Imágenes</FormLabel>
+                     <FormMessage>{form.formState.errors.imageUrls?.message}</FormMessage>
                     <div className="grid grid-cols-3 gap-2">
                       {previewImages.map((src, index) => (
                         <div key={index} className="relative aspect-square">
@@ -310,7 +340,6 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
                         }}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
