@@ -1,3 +1,4 @@
+
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
@@ -29,9 +30,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 
 const formatPrice = (price: number) => {
-  return new Intl.NumberFormat("es-ES", {
+  return new Intl.NumberFormat("es-MX", {
     style: "currency",
-    currency: "EUR",
+    currency: "MXN",
   }).format(price);
 };
 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
@@ -209,7 +210,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Precio (€)</FormLabel>
+                    <FormLabel>Precio (MXN)</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" placeholder="19.99" {...field} />
                     </FormControl>
