@@ -33,14 +33,13 @@ const prompt = ai.definePrompt({
   name: 'enhanceProductDescriptionPrompt',
   input: {schema: EnhanceProductDescriptionInputSchema},
   output: {schema: EnhanceProductDescriptionOutputSchema},
-  prompt: `You are an expert copywriter specializing in e-commerce product descriptions. Your goal is to create compelling and engaging descriptions that will entice customers to purchase the product.
+  prompt: `You are an expert copywriter specializing in e-commerce product descriptions.
+Your goal is to create compelling and engaging descriptions that will entice customers to purchase the product.
 
-  Based on the following product name and description, generate an enhanced product description.
+Based on the following product name and description, generate an enhanced product description.
 
-  Product Name: {{{productName}}}
-  Current Description: {{{productDescription}}}
-
-  Enhanced Description:`,
+Product Name: {{{productName}}}
+Current Description: {{{productDescription}}}`,
 });
 
 const enhanceProductDescriptionFlow = ai.defineFlow(
