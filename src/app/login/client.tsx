@@ -113,10 +113,6 @@ export default function LoginClient() {
             </form>
           </CardContent>
         </Card>
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-            <p>Email: mpceciliotopetecruz@gmail.com</p>
-            <p>Contraseña: Nomeacuerdo221182</p>
-        </div>
       </div>
     </div>
   );
