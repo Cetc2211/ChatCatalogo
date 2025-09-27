@@ -1,3 +1,4 @@
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -28,11 +29,37 @@ export async function getProducts(): Promise<Product[]> {
     category: p.category,
   }));
 
-  // Merge with any in-memory changes, avoiding duplicates
-  const inMemoryOnlyProducts = products.filter(p => !PlaceHolderImages.some(pi => pi.id === p.id));
-  const allProducts = [...currentProducts, ...inMemoryOnlyProducts];
+  // Create a map of the current (placeholder) products for efficient lookup
+  const placeholderMap = new Map(currentProducts.map(p => [p.id, p]));
+
+  // Create a new array to hold the merged list
+  const mergedProducts: Product[] = [];
+  const processedIds = new Set<string>();
+
+  // Iterate over the in-memory products (which contains edits and new products)
+  for (const product of products) {
+    // If the product is an edited version of a placeholder, use the in-memory version
+    if (placeholderMap.has(product.id)) {
+      mergedProducts.push(product);
+      processedIds.add(product.id);
+    } else {
+      // If it's a new product, add it
+      mergedProducts.push(product);
+      processedIds.add(product.id);
+    }
+  }
+
+  // Add any placeholder products that weren't in the in-memory list (e.g., if the in-memory list was cleared)
+  for (const placeholderProduct of currentProducts) {
+    if (!processedIds.has(placeholderProduct.id)) {
+      mergedProducts.push(placeholderProduct);
+    }
+  }
   
-  return structuredClone(allProducts.sort((a, b) => a.name.localeCompare(b.name)));
+  // Update the global in-memory store with the correctly merged and ordered list
+  products = mergedProducts.sort((a, b) => a.name.localeCompare(b.name));
+  
+  return structuredClone(products);
 }
 
 // Validation is now handled on the client-side before calling this action.
@@ -51,20 +78,7 @@ export async function upsertProduct(data: Omit<Product, 'imagePaths'> & { id?: s
       revalidatePath("/admin/products");
       return products[productIndex];
     } else {
-      // If product not found in-memory, it might be a placeholder
-      const placeholderIndex = PlaceHolderImages.findIndex(p => p.id === data.id);
-      if (placeholderIndex > -1) {
-         const updatedProduct = {
-            ...products.find(p => p.id === data.id)!,
-            ...data,
-         };
-         products = products.map(p => p.id === data.id ? updatedProduct : p);
-         revalidatePath("/");
-         revalidatePath("/admin/products");
-         return updatedProduct;
-      } else {
         throw new Error("Product not found");
-      }
     }
   } else {
     // Create new product
