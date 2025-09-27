@@ -19,7 +19,7 @@ interface WhatsAppDialogProps {
 
 // !! IMPORTANTE: Reemplaza este número con el número de WhatsApp de tu negocio.
 // Formato internacional sin '+' o '00'. Ejemplo: 34123456789 para España.
-const BUSINESS_PHONE_NUMBER = "34123456789";
+const BUSINESS_PHONE_NUMBER = "3111477413";
 
 export function WhatsAppDialog({ isOpen, onOpenChange, productName }: WhatsAppDialogProps) {
   const message = `¡Hola! Estoy interesado/a en comprar el "${productName}".`;
