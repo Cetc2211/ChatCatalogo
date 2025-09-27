@@ -11,14 +11,28 @@ let products: Product[] = PlaceHolderImages.map((p, index) => ({
   name: p.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
   description: p.description,
   price: parseFloat(((index + 1) * 23.45).toFixed(2)),
-  imageUrls: [p.imageUrl], // Changed to array
-  imagePaths: [`placeholder/${p.id}`], // Changed to array
+  imageUrls: [p.imageUrl],
+  imagePaths: [`placeholder/${p.id}`],
   category: p.category,
 }));
 
 export async function getProducts(): Promise<Product[]> {
-  // Use structuredClone for deep cloning, which is safer for complex objects.
-  return structuredClone(products.sort((a, b) => a.name.localeCompare(b.name)));
+  // Always start with a fresh copy from the placeholder images to ensure data consistency across server reloads
+  const currentProducts = PlaceHolderImages.map((p, index) => ({
+    id: p.id,
+    name: p.id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+    description: p.description,
+    price: parseFloat(((index + 1) * 23.45).toFixed(2)),
+    imageUrls: [p.imageUrl],
+    imagePaths: [`placeholder/${p.id}`],
+    category: p.category,
+  }));
+
+  // Merge with any in-memory changes, avoiding duplicates
+  const inMemoryOnlyProducts = products.filter(p => !PlaceHolderImages.some(pi => pi.id === p.id));
+  const allProducts = [...currentProducts, ...inMemoryOnlyProducts];
+  
+  return structuredClone(allProducts.sort((a, b) => a.name.localeCompare(b.name)));
 }
 
 // Validation is now handled on the client-side before calling this action.
@@ -37,7 +51,20 @@ export async function upsertProduct(data: Omit<Product, 'imagePaths'> & { id?: s
       revalidatePath("/admin/products");
       return products[productIndex];
     } else {
-      throw new Error("Product not found");
+      // If product not found in-memory, it might be a placeholder
+      const placeholderIndex = PlaceHolderImages.findIndex(p => p.id === data.id);
+      if (placeholderIndex > -1) {
+         const updatedProduct = {
+            ...products.find(p => p.id === data.id)!,
+            ...data,
+         };
+         products = products.map(p => p.id === data.id ? updatedProduct : p);
+         revalidatePath("/");
+         revalidatePath("/admin/products");
+         return updatedProduct;
+      } else {
+        throw new Error("Product not found");
+      }
     }
   } else {
     // Create new product
