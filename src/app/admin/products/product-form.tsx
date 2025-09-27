@@ -68,7 +68,7 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
     defaultValues: {
       name: product?.name || "",
       description: product?.description || "",
-      price: product?.price || undefined,
+      price: product?.price || "",
       category: product?.category || "",
       images: null,
     },
@@ -95,14 +95,17 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
         });
         setPreviewImages(product.imageUrls);
       } else {
-        form.reset({ name: "", description: "", price: undefined, category: "", images: null });
+        form.reset({ name: "", description: "", price: "", category: "", images: null });
         setPreviewImages([]);
       }
     }
-  }, [product, isOpen]);
+  }, [product, isOpen, form.reset]);
 
   const handleCreateCategory = (newCategory: string) => {
-    setCategories(prev => [...prev, { value: newCategory, label: newCategory }]);
+    const newCategoryOption = { value: newCategory, label: newCategory };
+    if (!categories.some(c => c.value.toLowerCase() === newCategory.toLowerCase())) {
+      setCategories(prev => [...prev, newCategoryOption]);
+    }
     form.setValue('category', newCategory, { shouldValidate: true });
   };
 
@@ -354,7 +357,5 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess }: Produc
     </>
   );
 }
-
-    
 
     
