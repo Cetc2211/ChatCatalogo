@@ -27,7 +27,7 @@ import {
   SidebarTrigger,
   SidebarFooter
 } from "@/components/ui/sidebar"
-import { Package, LogOut, ChevronDown, Eye, Settings } from "lucide-react"
+import { Package, LogOut, ChevronDown, Eye } from "lucide-react"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -71,16 +71,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <Package />
                 <span>Productos</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => router.push("/admin/settings")}
-                isActive={pathname.startsWith("/admin/settings")}
-                tooltip="Configuración"
-              >
-                <Settings />
-                <span>Ajustes</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
