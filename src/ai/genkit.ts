@@ -1,4 +1,3 @@
-'''
 import { genkit } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
@@ -13,4 +12,3 @@ genkit.config({
 });
 
 export default genkit;
-'''
