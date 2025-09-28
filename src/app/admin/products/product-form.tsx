@@ -8,7 +8,9 @@ import * as z from "zod";
 import Image from "next/image";
 import { Product } from "@/lib/types";
 import { upsertProduct } from "@/app/actions";
-import { enhanceProductDescription } from "@/ai/flows/enhance-product-description";
+// IMPORTANT: AI-related imports are removed from the client component.
+// import { enhanceProductDescription } from "@/ai/flows/enhance-product-description";
+import { generateDescriptionAction } from "./actions"; // Import the server action
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,16 +23,6 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles, X } from "lucide-react";
@@ -69,7 +61,6 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   
   const [isAiLoading, startAiTransition] = useTransition();
-  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
 
   const form = useForm<ProductFormValues>({
     resolver: async (data, context, options) => {
@@ -187,41 +178,34 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
     });
   }
   
-  const handleEnhanceDescription = () => {
-    const { name, description } = form.getValues();
-    if (!name || !description) {
+  const handleGenerateDescription = () => {
+    const { name, category } = form.getValues();
+    if (!name || !category) {
       toast({
         variant: "destructive",
         title: "Faltan datos",
-        description: "Por favor, introduce un nombre y una descripción antes de mejorar con IA.",
+        description: "Por favor, introduce un nombre y una categoría para generar una descripción con IA.",
       });
       return;
     }
+
     startAiTransition(async () => {
-      try {
-        const result = await enhanceProductDescription({ productName: name, productDescription: description });
-        setAiSuggestion(result.enhancedDescription);
-      } catch (error) {
-        console.error("AI enhancement failed:", error);
+      const result = await generateDescriptionAction(name, category);
+      if (result.success) {
+        form.setValue('description', result.description!, { shouldValidate: true });
+        toast({
+          title: "Descripción Generada",
+          description: "La descripción ha sido rellenada con la sugerencia de la IA.",
+        });
+      } else {
         toast({
           variant: "destructive",
           title: "Error de IA",
-          description: "No se pudo generar la descripción. Inténtalo de nuevo.",
+          description: result.error,
         });
       }
     });
   };
-
-  const applyAiSuggestion = () => {
-    if(aiSuggestion) {
-      form.setValue('description', aiSuggestion, { shouldValidate: true });
-      setAiSuggestion(null);
-      toast({
-          title: "Descripción actualizada",
-          description: "La sugerencia de la IA ha sido aplicada.",
-      });
-    }
-  }
 
   return (
     <>
@@ -255,17 +239,9 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
                   <FormItem>
                     <div className="flex items-center justify-between">
                       <FormLabel>Descripción</FormLabel>
-                      <Button type="button" variant="ghost" size="sm" onClick={handleEnhanceDescription} disabled={isAiLoading}>
-                        {isAiLoading ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="mr-2 h-4 w-4" />
-                        )}
-                        Mejorar con IA
-                      </Button>
                     </div>
                     <FormControl>
-                      <Textarea placeholder="Describe tu producto..." className="resize-none" {...field} />
+                      <Textarea placeholder="Describe tu producto o genera uno con IA..." className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -305,6 +281,16 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
                     </FormItem>
                   )}
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                 <Button type="button" variant="ghost" className="w-full" onClick={handleGenerateDescription} disabled={isAiLoading}>
+                    {isAiLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Generar con IA
+                  </Button>
               </div>
               <FormField
                 control={form.control}
@@ -356,24 +342,6 @@ export function ProductForm({ isOpen, onOpenChange, product, onSuccess, categori
           </Form>
         </DialogContent>
       </Dialog>
-      
-      <AlertDialog open={!!aiSuggestion} onOpenChange={() => setAiSuggestion(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Sugerencia de la IA</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hemos generado una nueva descripción para tu producto. Puedes usarla o mantener la actual.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="max-h-60 overflow-y-auto rounded-md border bg-muted/50 p-4 text-sm">
-            {aiSuggestion}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={applyAiSuggestion}>Usar esta descripción</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
