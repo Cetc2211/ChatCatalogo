@@ -1,5 +1,5 @@
 
-import { startGenkit } from '@genkit-ai/nextjs';
+import { startGenkit } from '@genkit-ai/next';
 import '@/ai/genkit'; // Import to initialize Genkit configuration
 import { generateProductDescription } from '@/ai/flows/generate-product-description';
 
