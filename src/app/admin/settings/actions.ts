@@ -9,31 +9,11 @@ export async function saveGeminiApiKey(apiKey: string) {
   }
 
   try {
-    const envLocalPath = path.join(process.cwd(), '.env.local');
-    let envContent = '';
+    // En entornos serverless como Vercel, solo se puede escribir en el directorio /tmp
+    const configPath = path.join('/tmp', 'genkit-config.json');
+    const config = { geminiApiKey: apiKey };
 
-    try {
-      envContent = await fs.readFile(envLocalPath, 'utf-8');
-    } catch (error) {
-      // El archivo .env.local no existe, se creará uno nuevo.
-    }
-
-    const lines = envContent.split('\n');
-    let keyExists = false;
-
-    const newLines = lines.map(line => {
-      if (line.startsWith('GEMINI_API_KEY=')) {
-        keyExists = true;
-        return `GEMINI_API_KEY=${apiKey}`;
-      }
-      return line;
-    });
-
-    if (!keyExists) {
-      newLines.push(`GEMINI_API_KEY=${apiKey}`);
-    }
-
-    await fs.writeFile(envLocalPath, newLines.join('\n'));
+    await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
     return { success: true };
   } catch (error) {
