@@ -1,4 +1,4 @@
-import { genkit, GenkitPlugin } from 'genkit';
+import { configureGenkit, GenkitPlugin } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
 const plugins: GenkitPlugin[] = [];
@@ -11,10 +11,9 @@ if (process.env.GEMINI_API_KEY) {
   );
 }
 
-genkit.config({
+// Corrected from genkit.config to configureGenkit
+configureGenkit({
   plugins,
   logLevel: 'debug',
   enableTracingAndMetrics: true,
 });
-
-export default genkit;

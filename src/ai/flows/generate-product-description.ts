@@ -1,31 +1,23 @@
-
 import { defineFlow } from 'genkit';
-import * as z from 'zod';
-import { geminiPro } from '@genkit-ai/googleai';
-
-const prompt = (
-  { productName, category }: { productName: string, category: string }
-) => `Genera una descripción atractiva y concisa para el siguiente producto, sin usar markdown y en menos de 150 caracteres:
-
-Nombre del Producto: ${productName}
-Categoría: ${category}
-
-Descripción:`;
+import { geminiPro } from 'genkit/models';
+import { z } from 'zod';
 
 export const generateProductDescription = defineFlow(
-  {
-    name: 'generateProductDescription',
-    inputSchema: z.object({
-      productName: z.string(),
-      category: z.string(),
-    }),
-    outputSchema: z.string(),
-  },
-  async (input) => {
-    const llmResponse = await geminiPro.generate({
-      prompt: prompt(input),
-    });
+    {
+        name: 'generateProductDescription',
+        inputSchema: z.object({
+            productName: z.string(),
+            productFeatures: z.array(z.string()),
+        }),
+        outputSchema: z.string(),
+    },
+    async (input) => {
+        const prompt = `Genera una descripción de producto para un artículo llamado "${input.productName}" que tiene las siguientes características: ${input.productFeatures.join(', ')}.`;
 
-    return llmResponse.text();
-  }
+        const llmResponse = await geminiPro.generate({ 
+            prompt: prompt,
+        });
+
+        return llmResponse.text();
+    }
 );
